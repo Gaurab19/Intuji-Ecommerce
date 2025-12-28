@@ -1,329 +1,656 @@
 <template>
-  <div
-    class="p-4 mx-auto lg:max-w-screen-xl"
-  >
-    <div class="border-b border-gray-300 pb-4">
+  <div class="p-4 mx-auto lg:max-w-screen-xl">
+    <!-- Header -->
+    <div class="border-b border-gray-300 pb-4 mb-6">
       <h2 class="text-slate-900 text-2xl font-bold">
         Hot list
       </h2>
       <p class="text-slate-600 mt-2">
-        Out the most popular and trending products.
+        Check out the most popular and trending products.
       </p>
     </div>
 
-    <PageLoader
-      v-if="isLoading"
-      :loading="isLoading"
-    />
-    <div v-else>
-      <div class="flex">
-        <div class="w-full max-w-[300px] shrink-0 shadow-md px-6 sm:px-8 min-h-screen py-6">
-          <div class="flex items-center border-b border-gray-300 pb-2 mb-6">
+    <div class="flex flex-col lg:flex-row gap-6">
+      <!-- Sidebar Filter -->
+      <aside class="w-full lg:max-w-[280px] shrink-0">
+        <div class="bg-white shadow-md rounded-lg px-6 py-6 sticky top-4">
+          <div class="flex items-center justify-between border-b border-gray-300 pb-3 mb-6">
             <h3 class="text-slate-900 text-lg font-semibold">
-              Filter
+              Filters
             </h3>
-          </div>
-          <div>
-            <h6 class="text-slate-900 text-sm font-semibold">
-              Search For Products
-            </h6>
-            <div class="flex px-3 py-1.5 rounded-md  overflow-hidden mt-2">
-              <UInput
-                ref="input"
-                v-model="searchProductKey"
-                placeholder="Search for Your Desired Product"
-                @keyup="processChange"
-              >
-                <template #trailing />
-              </UInput>
-            </div>
-          </div>
-
-          <hr class="my-6 border-gray-300">
-
-          <hr class="my-6 border-gray-300">
-
-          <div>
-            <h6 class="text-slate-900 text-sm font-semibold">
-              Price
-            </h6>
-            <div class="relative mt-6">
-              <div class="h-1.5 bg-gray-300 relative">
-                <USlider
-                  v-model="priceSliderValue"
-                  :min="0"
-                  :max="150"
-                  :default-value="10"
-                  :step="1.5"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="w-full p-6">
-          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-12 md:gap-12 mt-12 mb-10">
-            <div
-              v-for="product in products"
-              key="product"
-              class="flex flex-col border border-gray-300 shadow-sm rounded-md p-1.5 transition-all relative overflow-hidden"
+            <button
+              v-if="hasActiveFilters"
+              @click="clearAllFilters"
+              class="text-sm text-indigo-600 hover:text-indigo-700 font-medium transition-colors"
             >
-              <NuxtLink :to="`/${product.id}`">
-                <a
-                  href="javascript:void(0)"
-                  class="block"
-                >
-                  <div class="w-full bg-slate-50">
-                    <img
-                      :src="product.images[0]"
-                      alt="Product-1"
-                      class="w-full aspect-square object-cover object-top"
-                    >
-                  </div>
-                  <div class="py-4 px-2 text-left">
-                    <h6 class="text-sm sm:text-[15px] font-semibold text-slate-900 line-clamp-2">{{ product.title }}</h6>
-                    <p class="text-sm mt-1 text-slate-600 truncate">{{ product.description }}</p>
-                    <p class="text-sm mt-1 text-red-600 truncate">{{ product.brand }}</p>
-                    <div class="flex items-center gap-1 mt-2">
-                      <svg
-                        v-for="n in Math.floor(product.rating)"
-                        :key="`full-${n}`"
-                        xmlns="http://www.w3.org/2000/svg"
-                        class="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0"
-                        width="14"
-                        height="14"
-                        viewBox="0 0 511.987 511"
-                      >
-                        <path
-                          fill="#ffc107"
-                          d="M510.652 195.902a27.158 27.158 0 0 0-23.425-18.71l-147.774-13.419-58.433-136.77c-4.31-10.023-14.122-16.509-25.024-16.509s-20.715 6.487-25.023 16.534l-58.434 136.746-147.797 13.418a27.208 27.208 0 0 0-23.402 18.71c-3.371 10.368-.258 21.739 7.957 28.907l111.7 97.96-32.938 145.09c-2.41 10.668 1.73 21.696 10.582 28.094 4.757 3.438 10.324 5.188 15.937 5.188 4.84 0 9.64-1.305 13.95-3.883l127.468-76.184 127.422 76.184c9.324 5.61 21.078 5.097 29.91-1.305a27.223 27.223 0 0 0 10.582-28.094l-32.937-145.09 111.699-97.94a27.224 27.224 0 0 0 7.98-28.927zm0 0"
-                          data-original="#ffc107"
-                        />
-                      </svg>
-                      <!-- for-half-stars v-if="item.ranking % 1 !== 0" -->
-                      <svg
-                        v-for="n in 5 - Math.floor(product.rating)"
-                        :key="`empty-${n}`"
-                        xmlns="http://www.w3.org/2000/svg"
-                        class="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0"
-                        width="14"
-                        height="14"
-                        fill="#ffc107"
-                        viewBox="0 0 511.987 511"
-                      >
-                        <path
-                          d="M114.594 501.14c-5.61 0-11.18-1.75-15.934-5.187a27.223 27.223 0 0 1-10.582-28.094l32.938-145.09L9.312 224.81a27.188 27.188 0 0 1-7.976-28.907 27.208 27.208 0 0 1 23.402-18.71l147.797-13.419L230.97 27.027c4.307-10.047 14.119-16.535 25.022-16.535s20.715 6.488 25.024 16.512l58.433 136.77 147.774 13.417c10.882.98 20.054 8.344 23.425 18.711 3.372 10.368.254 21.739-7.957 28.907L390.988 322.75l32.938 145.086c2.414 10.668-1.727 21.7-10.578 28.098-8.832 6.398-20.61 6.89-29.91 1.3l-127.446-76.16-127.445 76.203c-4.309 2.559-9.11 3.864-13.953 3.864zm141.398-112.874c4.844 0 9.64 1.3 13.953 3.859l120.278 71.938-31.086-136.942a27.21 27.21 0 0 1 8.62-26.516l105.473-92.5-139.543-12.671a27.18 27.18 0 0 1-22.613-16.493L255.992 49.895 200.844 178.96c-3.883 9.195-12.524 15.512-22.547 16.43L38.734 208.062l105.47 92.5c7.554 6.614 10.858 16.77 8.62 26.54l-31.062 136.937 120.277-71.914c4.309-2.559 9.11-3.86 13.953-3.86zm-84.586-221.848s0 .023-.023.043zm169.13-.063.023.043c0-.023 0-.023-.024-.043zm0 0"
-                          data-original="#000000"
-                        />
-                      </svg>
-                      <span class="ml-1.5 text-sm font-medium">({{ product?.reviews?.length }})</span>
-                    </div>
-                    <div class="mt-4">
-                      <p class="text-slate-900 font-semibold text-sm sm:text-[15px] break-words">
-                        <span class="mr-1.5">MRP:</span><strike class="mr-1.5 text-slate-600">{{ `${(product.price + ((product.discountPercentage*product.price)/100)).toFixed(2)}` }}</strike>{{ product.price }}</p>
-                    </div>
-                  </div>
-                </a>
-              </NuxtLink>
-              <!-- <div class="h-[78px]">
-            <div class="flex flex-col items-center w-full absolute left-0 right-0 px-2 bottom-3">
-              <button
-                type="button"
-                class="flex items-center justify-center gap-2 px-2 py-2 cursor-pointer rounded-md text-white text-sm sm:text-[15px] font-medium whitespace-nowrap border-0 outline-0 w-full bg-purple-700 hover:bg-purple-800"
+              Clear All
+            </button>
+          </div>
+
+          <!-- Search -->
+          <div class="mb-6">
+            <label class="text-slate-900 text-sm font-semibold block mb-2">
+              Search Products
+            </label>
+            <div class="relative">
+              <input
+                v-model="searchProductKey"
+                @input="handleSearchInput"
+                type="text"
+                placeholder="Search products..."
+                class="w-full px-4 py-2.5 pr-10 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all outline-none text-sm"
+              />
+              <svg 
+                v-if="searchProductKey"
+                @click="clearSearch"
+                class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 hover:text-gray-600 cursor-pointer"
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
               >
-                Add to Cart
-              </button>
-              <button
-                type="button"
-                class="pb-0.5 pt-3 cursor-pointer text-sm sm:text-[15px] text-slate-900 font-medium whitespace-nowrap outline-0 flex items-center gap-2"
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+              <svg 
+                v-else
+                class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="w-4 h-4"
-                  width="16px"
-                  height="16px"
-                  viewBox="0 0 66 66"
-                ><path
-                  d="M45.5 4A18.53 18.53 0 0 0 32 9.86 18.5 18.5 0 0 0 0 22.5C0 40.92 29.71 59 31 59.71a2 2 0 0 0 2.06 0C34.29 59 64 40.92 64 22.5A18.52 18.52 0 0 0 45.5 4ZM32 55.64C26.83 52.34 4 36.92 4 22.5a14.5 14.5 0 0 1 26.36-8.33 2 2 0 0 0 3.27 0A14.5 14.5 0 0 1 60 22.5c0 14.41-22.83 29.83-28 33.14Z"
-                  data-original="#000000"
-                />
-                </svg>
-                <span>Add to wishlist</span>
-              </button>
-            </div>
-          </div> -->
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
             </div>
           </div>
 
-          <div
-            v-if="paginationData.total>0"
-            class="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6"
-          >
-            <div class="flex flex-1 justify-between sm:hidden">
-              <a
-                href="#"
-                class="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-              >Previous</a>
-              <a
-                href="#"
-                class="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-              >Next</a>
-            </div>
-            <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
-              <div>
-                <p class="text-sm text-gray-700">
-                  Showing
-                  <span class="font-medium">{{ paginationData?.skip + 1 }}</span>
-                  to
-                  <span class="font-medium">{{ paginationData?.limit }}</span>
-                  of
-                  <span class="font-medium">{{ paginationData?.total }}</span>
-                  results
-                </p>
-              </div>
-              <div>
-                <nav
-                  aria-label="Pagination"
-                  class="isolate inline-flex -space-x-px rounded-md shadow-xs"
-                >
-                  <a
-                    href="#"
-                    class="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 inset-ring inset-ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0"
-                  >
-                    <span class="sr-only">Previous</span>
-                    <svg
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                      data-slot="icon"
-                      aria-hidden="true"
-                      class="size-5"
-                    >
-                      <path
-                        d="M11.78 5.22a.75.75 0 0 1 0 1.06L8.06 10l3.72 3.72a.75.75 0 1 1-1.06 1.06l-4.25-4.25a.75.75 0 0 1 0-1.06l4.25-4.25a.75.75 0 0 1 1.06 0Z"
-                        clip-rule="evenodd"
-                        fill-rule="evenodd"
-                      />
-                    </svg>
-                  </a>
-                  <!-- Current: "z-10 bg-indigo-600 text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600", Default: "text-gray-900 inset-ring inset-ring-gray-300 hover:bg-gray-50 focus:outline-offset-0" -->
-                  <a
-                    v-for="item in pageList"
-                    :key="item"
-                    href="#"
-                    :class="{
-                      'bg-indigo-600 dark:text-blue-200': item === paginationData.skip+1
-                    }"
-                    class="relative z-10 inline-flex bg-indigo-200 items-center px-4 py-2 text-sm bg-white-600 font-semibold text-white focus:z-20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-                  >{{ item }}</a>
-                  <a
-                    href="#"
-                    class="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 inset-ring inset-ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0"
-                  >
-                    <span class="sr-only">Next</span>
-                    <svg
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                      data-slot="icon"
-                      aria-hidden="true"
-                      class="size-5"
-                    >
-                      <path
-                        d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z"
-                        clip-rule="evenodd"
-                        fill-rule="evenodd"
-                      />
-                    </svg>
-                  </a>
-                </nav>
-              </div>
+          <!-- Category Filter -->
+          <div>
+            <label class="text-slate-900 text-sm font-semibold block mb-3">
+              Categories
+            </label>
+            <div class="max-h-96 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
+              <label
+                v-for="category in productCategoryList"
+                :key="category.value"
+                class="flex items-center p-2.5 rounded-lg hover:bg-indigo-50 cursor-pointer transition-colors group"
+              >
+                <input
+                  type="radio"
+                  :value="category.value"
+                  v-model="selectedProductCategory"
+                  class="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
+                />
+                <span class="ml-3 text-sm text-gray-700 group-hover:text-indigo-700 flex-1">
+                  {{ category.label }}
+                </span>
+              </label>
             </div>
           </div>
+
+          <!-- Sort Options -->
+          <div class="mt-6 pt-6 border-t border-gray-300">
+            <label class="text-slate-900 text-sm font-semibold block mb-3">
+              Sort By
+            </label>
+            <select
+              v-model="sortOption"
+              class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all outline-none text-sm"
+            >
+              <option value="">Default</option>
+              <option value="price-asc">Price: Low to High</option>
+              <option value="price-desc">Price: High to Low</option>
+              <option value="rating">Rating: High to Low</option>
+            </select>
+          </div>
         </div>
-      </div>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="flex-1">
+        <!-- Active Filters -->
+        <div v-if="hasActiveFilters" class="flex flex-wrap gap-2 mb-4">
+          <span
+            v-if="searchProductKey"
+            class="inline-flex items-center gap-2 px-3 py-1.5 bg-indigo-100 text-indigo-700 rounded-full text-sm font-medium"
+          >
+            Search: "{{ searchProductKey }}"
+            <button @click="clearSearch" class="hover:text-indigo-900">
+              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+              </svg>
+            </button>
+          </span>
+          <span
+            v-if="selectedProductCategory"
+            class="inline-flex items-center gap-2 px-3 py-1.5 bg-indigo-100 text-indigo-700 rounded-full text-sm font-medium"
+          >
+            {{ getCategoryLabel(selectedProductCategory) }}
+            <button @click="clearCategory" class="hover:text-indigo-900">
+              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+              </svg>
+            </button>
+          </span>
+        </div>
+
+        <!-- Loading State -->
+        <div v-if="isLoading" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+          <div
+            v-for="n in 8"
+            :key="n"
+            class="border border-gray-200 rounded-lg p-2 animate-pulse"
+          >
+            <div class="w-full aspect-square bg-gray-200 rounded-md mb-3"></div>
+            <div class="h-4 bg-gray-200 rounded mb-2"></div>
+            <div class="h-3 bg-gray-200 rounded w-3/4 mb-2"></div>
+            <div class="h-3 bg-gray-200 rounded w-1/2"></div>
+          </div>
+        </div>
+
+        <!-- Empty State -->
+        <div
+          v-else-if="products.length === 0"
+          class="flex flex-col items-center justify-center py-16 px-4"
+        >
+          <svg class="w-24 h-24 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <h3 class="text-xl font-semibold text-gray-700 mb-2">No products found</h3>
+          <p class="text-gray-500 text-center mb-4">
+            Try adjusting your filters or search terms
+          </p>
+          <button
+            @click="clearAllFilters"
+            class="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium"
+          >
+            Clear Filters
+          </button>
+        </div>
+
+        <!-- Error State -->
+        <div
+          v-else-if="error"
+          class="flex flex-col items-center justify-center py-16 px-4"
+        >
+          <svg class="w-24 h-24 text-red-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          <h3 class="text-xl font-semibold text-gray-700 mb-2">Something went wrong</h3>
+          <p class="text-gray-500 text-center mb-4">{{ error }}</p>
+          <button
+            @click="retryFetch"
+            class="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium"
+          >
+            Try Again
+          </button>
+        </div>
+
+        <!-- Products Grid -->
+        <div v-else class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+          <article
+            v-for="product in sortedProducts"
+            :key="product.id"
+            class="flex flex-col border border-gray-200 shadow-sm rounded-lg overflow-hidden transition-all hover:shadow-xl hover:border-indigo-300 group bg-white"
+            @click="navigateTo(`/${product.id}`)"
+          >
+            <div class="relative w-full bg-slate-50 overflow-hidden">
+              <img
+                :src="product.images[0]"
+                :alt="product.title"
+                @error="handleImageError"
+                class="w-full aspect-square object-cover object-top group-hover:scale-105 transition-transform duration-300"
+                loading="lazy"
+              />
+              <div
+                v-if="product.discountPercentage > 0"
+                class="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded-md text-xs font-bold shadow-lg"
+              >
+                -{{ Math.round(product.discountPercentage) }}%
+              </div>
+            </div>
+            
+            <div class="p-3 flex-1 flex flex-col">
+              <h3 class="text-sm sm:text-[15px] font-semibold text-slate-900 line-clamp-2 group-hover:text-indigo-600 transition-colors mb-2">
+                {{ product.title }}
+              </h3>
+              <p class="text-xs text-slate-600 line-clamp-1 mb-2">{{ product.description }}</p>
+              <p class="text-xs text-red-600 font-medium mb-2">{{ product.brand }}</p>
+              
+              <div class="flex items-center gap-1 mb-3">
+                <div class="flex">
+                  <svg
+                    v-for="n in 5"
+                    :key="n"
+                    xmlns="http://www.w3.org/2000/svg"
+                    :class="[
+                      'w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0',
+                      n <= Math.floor(product.rating) ? 'fill-yellow-400' : 'fill-gray-200'
+                    ]"
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                  </svg>
+                </div>
+                <span class="ml-1 text-xs font-medium text-slate-600">
+                  {{ product.rating.toFixed(1) }} ({{ product?.reviews?.length || 0 }})
+                </span>
+              </div>
+              
+              <div class="mt-auto">
+                <div class="flex items-center gap-2 mb-3">
+                  <span class="text-slate-400 text-xs line-through">
+                    ${{ (product.price / (1 - product.discountPercentage / 100)).toFixed(2) }}
+                  </span>
+                  <span class="text-indigo-600 font-bold text-base sm:text-lg">
+                    ${{ product.price.toFixed(2) }}
+                  </span>
+                </div>
+                
+                <button
+                  class="w-full px-3 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium shadow-sm hover:shadow-md"
+                >
+                  Add to Cart
+                </button>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <!-- Enhanced Pagination -->
+        <div
+          v-if="paginationData.total > 0 && !isLoading"
+          class="flex flex-col sm:flex-row items-center justify-between bg-white border border-gray-200 px-6 py-4 rounded-lg shadow-sm mt-8"
+        >
+          <!-- Info -->
+          <div class="mb-4 sm:mb-0">
+            <p class="text-sm text-gray-700">
+              Showing
+              <span class="font-semibold text-indigo-600">{{ rangeStart }}</span>
+              to
+              <span class="font-semibold text-indigo-600">{{ rangeEnd }}</span>
+              of
+              <span class="font-semibold text-indigo-600">{{ paginationData.total }}</span>
+              results
+            </p>
+          </div>
+
+          <!-- Pagination Controls -->
+          <nav aria-label="Pagination" class="flex items-center gap-2">
+            <button
+              @click="previousPage"
+              :disabled="currentPage === 1"
+              :class="[
+                'px-3 py-2 rounded-lg border text-sm font-medium transition-all flex items-center gap-1',
+                currentPage === 1
+                  ? 'border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed'
+                  : 'border-gray-300 bg-white text-gray-700 hover:bg-indigo-50 hover:border-indigo-400 hover:text-indigo-600'
+              ]"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+              </svg>
+              <span class="hidden sm:inline">Previous</span>
+            </button>
+
+            <div class="flex items-center gap-1">
+              <button
+                v-for="(page, index) in visiblePages"
+                :key="index"
+                @click="page !== '...' && goToPage(page)"
+                :disabled="page === '...'"
+                :class="[
+                  'min-w-[40px] h-10 rounded-lg text-sm font-semibold transition-all',
+                  page === currentPage
+                    ? 'bg-indigo-600 text-white shadow-md'
+                    : page === '...'
+                    ? 'bg-transparent text-gray-400 cursor-default'
+                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-indigo-50 hover:border-indigo-400 hover:text-indigo-600'
+                ]"
+              >
+                {{ page }}
+              </button>
+            </div>
+
+            <button
+              @click="nextPage"
+              :disabled="currentPage === getTotalPages"
+              :class="[
+                'px-3 py-2 rounded-lg border text-sm font-medium transition-all flex items-center gap-1',
+                currentPage === getTotalPages
+                  ? 'border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed'
+                  : 'border-gray-300 bg-white text-gray-700 hover:bg-indigo-50 hover:border-indigo-400 hover:text-indigo-600'
+              ]"
+            >
+              <span class="hidden sm:inline">Next</span>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </nav>
+        </div>
+
+        <!-- Back to Top Button -->
+        <transition name="fade">
+          <button
+            v-if="showBackToTop"
+            @click="scrollToTop"
+            class="fixed bottom-8 right-8 p-3 bg-indigo-600 text-white rounded-full shadow-lg hover:bg-indigo-700 transition-all hover:scale-110 z-50"
+            aria-label="Back to top"
+          >
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+            </svg>
+          </button>
+        </transition>
+      </main>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-const toast = useToast()
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 
-const paginationData = ref({
-  limit: 30,
+interface Product {
+  id: number
+  title: string
+  description: string
+  price: number
+  discountPercentage: number
+  rating: number
+  brand: string
+  category: string
+  images: string[]
+  reviews?: any[]
+}
+
+interface PaginationData {
+  limit: number
+  skip: number
+  total: number
+}
+
+interface Category {
+  label: string
+  value: string
+}
+
+const ITEMS_PER_PAGE = 20
+const DEBOUNCE_DELAY = 500
+
+const paginationData = ref<PaginationData>({
+  limit: ITEMS_PER_PAGE,
   skip: 0,
-  total: null
+  total: 0
 })
-const products = ref([])
-const pageList = ref([])
-const productCategoryList = ref([])
-const selectedProductCategory = ref('')
+
+const productCategoryList = ref<Category[]>([])
+const products = ref<Product[]>([])
+const selectedProductCategory = ref<string>('')
 const isLoading = ref(true)
 const searchProductKey = ref('')
-const priceSliderValue = ref(null)
-async function fetchInitialData() {
-  const res = await $fetch(`https://dummyjson.com/products?limit=${paginationData.value.limit}&skip=${paginationData.value.skip}`, {
-    method: 'GET'
-  })
-  paginationData.value = {
-    limit: res?.limit,
-    skip: res?.skip,
-    total: res?.total
-  }
-  products.value = res.products
-  getPagesList()
-  isLoading.value = false
-}
-fetchInitialData()
+const sortOption = ref('')
+const error = ref('')
+const showBackToTop = ref(false)
+let searchTimeout: NodeJS.Timeout | null = null
+let abortController: AbortController | null = null
 
-async function fetchProductCategories() {
-  await $fetch('https://dummyjson.com/products/category-list')
-    .then((res) => {
-      productCategoryList.value = res
-    })
-}
-fetchProductCategories()
+// Computed Properties
+const currentPage = computed(() => {
+  return Math.floor(paginationData.value.skip / paginationData.value.limit) + 1
+})
 
 const getTotalPages = computed(() => {
   return Math.ceil(paginationData.value.total / paginationData.value.limit)
 })
-const getPagesList = () => {
-  for (let index = 1; index <= getTotalPages.value; index++) {
-    pageList.value.push(index)
+
+const rangeStart = computed(() => {
+  return Math.min(paginationData.value.skip + 1, paginationData.value.total)
+})
+
+const rangeEnd = computed(() => {
+  return Math.min(paginationData.value.skip + paginationData.value.limit, paginationData.value.total)
+})
+
+const hasActiveFilters = computed(() => {
+  return searchProductKey.value.trim() !== '' || selectedProductCategory.value !== ''
+})
+
+const visiblePages = computed(() => {
+  const total = getTotalPages.value
+  const current = currentPage.value
+  const pages: (number | string)[] = []
+  
+  if (total <= 7) {
+    for (let i = 1; i <= total; i++) {
+      pages.push(i)
+    }
+  } else {
+    if (current <= 4) {
+      for (let i = 1; i <= 5; i++) pages.push(i)
+      pages.push('...')
+      pages.push(total)
+    } else if (current >= total - 3) {
+      pages.push(1)
+      pages.push('...')
+      for (let i = total - 4; i <= total; i++) pages.push(i)
+    } else {
+      pages.push(1)
+      pages.push('...')
+      for (let i = current - 1; i <= current + 1; i++) pages.push(i)
+      pages.push('...')
+      pages.push(total)
+    }
   }
-}
-function debounce(func, timeout = 500) {
-  let timer
-  return (...args) => {
-    clearTimeout(timer)
-    timer = setTimeout(() => { func.apply(this, args) }, timeout)
-  }
-}
-async function saveInput() {
-  const res = await $fetch(`https://dummyjson.com/products/search?q=${searchProductKey.value}`, {
-    method: 'GET'
-  })
-  if (res.total == 0) {
-    window.alert(`Item ${searchProductKey.value} isn't available at the moment!`)
-    paginationData.value.total = 0
-  }
-  products.value = res.products
-  paginationData.value.total = res.total
-}
-const processChange = debounce(() => saveInput())
-watch(priceSliderValue, async (newValue, oldValue) => {
-  if (newValue) {
-    // const res = await $fetch(`https://dummyjson.com/products?select=price`, {
-    //   method: 'GET'
-    // })
-    const res = await $fetch('https://dummyjson.com/products')
-      .then((res) => {
-        const filtered = res.products.filter(p => p.price < newValue)
-        if (filtered.length == 0) {
-          window.alert(`Item ${searchProductKey.value} isn't available at the moment!`)
-          paginationData.value.total = 0
-        }
-        products.value = filtered
-        // paginationData.value.total = filtered.length
-      })
+  
+  return pages
+})
+
+const sortedProducts = computed(() => {
+  if (!sortOption.value) return products.value
+  
+  const sorted = [...products.value]
+  
+  switch (sortOption.value) {
+    case 'price-asc':
+      return sorted.sort((a, b) => a.price - b.price)
+    case 'price-desc':
+      return sorted.sort((a, b) => b.price - a.price)
+    case 'rating':
+      return sorted.sort((a, b) => b.rating - a.rating)
+    default:
+      return sorted
   }
 })
+
+// API Functions
+async function fetchProducts() {
+  if (abortController) {
+    abortController.abort()
+  }
+  
+  abortController = new AbortController()
+  isLoading.value = true
+  error.value = ''
+  
+  try {
+    let url = ''
+    
+    if (searchProductKey.value.trim()) {
+      url = `https://dummyjson.com/products/search?q=${encodeURIComponent(searchProductKey.value)}&limit=${paginationData.value.limit}&skip=${paginationData.value.skip}`
+    } else if (selectedProductCategory.value) {
+      url = `https://dummyjson.com/products/category/${selectedProductCategory.value}?limit=${paginationData.value.limit}&skip=${paginationData.value.skip}`
+    } else {
+      url = `https://dummyjson.com/products?limit=${paginationData.value.limit}&skip=${paginationData.value.skip}`
+    }
+    
+    const res = await fetch(url, { signal: abortController.signal })
+    
+    if (!res.ok) throw new Error('Failed to fetch products')
+    
+    const data = await res.json()
+    
+    paginationData.value = {
+      limit: data.limit,
+      skip: data.skip,
+      total: data.total
+    }
+    products.value = data.products
+  } catch (err: any) {
+    if (err.name !== 'AbortError') {
+      error.value = 'Failed to load products. Please try again.'
+      console.error('Error fetching products:', err)
+    }
+  } finally {
+    isLoading.value = false
+  }
+}
+
+async function fetchCategories() {
+  try {
+    const res = await fetch('https://dummyjson.com/products/category-list')
+    if (!res.ok) throw new Error('Failed to fetch categories')
+    
+    const data = await res.json()
+    productCategoryList.value = data.map((item: string) => ({
+      label: item.replace(/\b\w/g, char => char.toUpperCase()),
+      value: item
+    }))
+  } catch (err) {
+    console.error('Error fetching categories:', err)
+  }
+}
+
+// Event Handlers
+function handleSearchInput() {
+  if (searchTimeout) {
+    clearTimeout(searchTimeout)
+  }
+  
+  searchTimeout = setTimeout(() => {
+    resetPagination()
+    selectedProductCategory.value = ''
+    fetchProducts()
+  }, DEBOUNCE_DELAY)
+}
+
+function handleImageError(event: Event) {
+  const target = event.target as HTMLImageElement
+  target.src = 'https://via.placeholder.com/400x400?text=No+Image'
+}
+
+function clearSearch() {
+  searchProductKey.value = ''
+  resetPagination()
+  fetchProducts()
+}
+
+function clearCategory() {
+  selectedProductCategory.value = ''
+  resetPagination()
+  fetchProducts()
+}
+
+function clearAllFilters() {
+  searchProductKey.value = ''
+  selectedProductCategory.value = ''
+  sortOption.value = ''
+  resetPagination()
+  fetchProducts()
+}
+
+function resetPagination() {
+  paginationData.value.skip = 0
+}
+
+function getCategoryLabel(value: string): string {
+  const category = productCategoryList.value.find(cat => cat.value === value)
+  return category ? category.label : value
+}
+
+function previousPage() {
+  if (currentPage.value > 1) {
+    paginationData.value.skip -= paginationData.value.limit
+    fetchProducts()
+    scrollToTop()
+  }
+}
+
+function nextPage() {
+  if (currentPage.value < getTotalPages.value) {
+    paginationData.value.skip += paginationData.value.limit
+    fetchProducts()
+    scrollToTop()
+  }
+}
+
+function goToPage(page: number) {
+  if (page !== currentPage.value) {
+    paginationData.value.skip = (page - 1) * paginationData.value.limit
+    fetchProducts()
+    scrollToTop()
+  }
+}
+
+function retryFetch() {
+  fetchProducts()
+}
+
+function scrollToTop() {
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+function handleScroll() {
+  showBackToTop.value = window.scrollY > 500
+}
+
+// Watchers
+watch(selectedProductCategory, () => {
+  if (selectedProductCategory.value) {
+    searchProductKey.value = ''
+    resetPagination()
+    fetchProducts()
+  }
+})
+
+// Lifecycle
+onMounted(() => {
+  fetchProducts()
+  fetchCategories()
+  window.addEventListener('scroll', handleScroll)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', handleScroll)
+  if (searchTimeout) clearTimeout(searchTimeout)
+  if (abortController) abortController.abort()
+})
 </script>
+
+<style scoped>
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #c7d2fe;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #a5b4fc;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+</style>
